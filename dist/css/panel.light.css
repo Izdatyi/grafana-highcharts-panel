@@ -1,2 +1,3 @@
-panel-plugin-grafana-plugin-template-webpack .hello b {
-  color: black; }
+panel-plugin-highcharts-panel .highcharts-panel b {
+  color: black;
+}

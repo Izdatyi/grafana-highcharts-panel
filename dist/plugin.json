@@ -1,22 +1,28 @@
 {
   "type": "panel",
-  "name": "Plugin Template Name",
-  "id": "grafana-plugin-template-webpack",
+  "name": "Highcharts",
+  "id": "highcharts-panel",
   "info": {
-    "description": "Plugin Template Name Description",
+    "description": "Make your data come alive",
     "author": {
-      "name": "Author Name",
-      "url": "example.com"
+      "name": "Izdatyi",
+      "url": "https://github.com/Izdatyi/grafana-highcharts-panel"
     },
     "keywords": [ ],
-    "logos": { },
-    "links": [ ],
+    "logos": {
+      "small": "assets/logo.svg",
+      "large": "assets/logo.svg"
+    },
+    "links": [{
+      "name": "Homepage",
+      "url": "https://github.com/Izdatyi/grafana-highcharts-panel"
+    }],
     "screenshots": [ ],
-    "version": "0.0.1",
-    "updated": "2017-04-05"
+    "version": "0.0.2",
+    "updated": "2019-01-23"
   },
   "dependencies": {
-    "grafanaVersion": "4.6.x",
+    "grafanaVersion": "5.4.3",
     "plugins": [ ]
   }
 }

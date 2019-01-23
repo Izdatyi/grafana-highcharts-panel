@@ -31,16 +31,18 @@ class Ctrl extends MetricsPanelCtrl {
 
   _onRender() {
     // console.log("render");
-    if (this._chart) {
+    if (this.chart) {
       // this.chart.redraw();
-      this._chart.setSize(undefined, undefined, false);
+      this.chart.setSize(undefined, undefined, false);
     }
   }
 
   _onDataReceived(data) {
+    console.log("----------------------------");
     console.log("_onDataReceived:", data);
-    if (!this._chart) {
-      this._chart = this._createChart(data);
+    if (!this.chart) {
+      this.chart = this._createChart(data);
+      console.log("chart:", this.chart); // Highcharts.charts[0]
     } else {
       this._updateChart(data);
     }
@@ -159,47 +161,86 @@ class Ctrl extends MetricsPanelCtrl {
         "padding": 9,
         "shape": "square"
       },
+      "plotOptions": {
+        "series": {
+          "connectNulls": true
+        }
+      },
 
       series: this._makeSeries(data),
-      plotOptions: {
-        series: {
-          connectNulls: true
-        }
-      }
-    });
-  }
-
-  _makeSeries(data) {
-    console.log("_makeSeries");
-    return data.map((timeSerie) => {
-      return {
-        id: timeSerie.target,
-        name: timeSerie.target,
-        data: this.flip(timeSerie.datapoints)
-      }
     });
   }
 
   flip(array) {
-    return array.map(([x, y]) => ([y * 1000, x]));
+    // return array.map(([x, y]) => ([y * 1000, x]));
+    var offset = new Date().getTimezoneOffset();
+    console.log("getTimezoneOffset:", offset, 'min');
+    offset = offset * 60 * 1000;
+    return array.map(([x, y]) => ([y - offset, x]));
+  }
+
+  _makeSeries(data) {  // Highcharts.charts[0]
+    console.log("_makeSeries");
+    return data.map((timeSerie) => {
+      console.log("timeSerie:", timeSerie);
+      return {
+        id: timeSerie.target,
+        name: timeSerie.target,
+        data: this.flip(timeSerie.datapoints),
+
+        turboThreshold: 0,
+        marker: {
+          enabled: true,
+          symbol: "circle",
+          radius: 4
+        },
+        // color: '#FF0000',
+        // yAxis: 1,
+        type: "spline"
+      }
+    });
   }
 
   _updateChart(data) {
+    console.log("_updateChart");
+    console.log("this.chart.series:", this.chart.series);
+
     const series = this._makeSeries(data);
-    let newOnes = [], oldOnes = [];
+    console.log("series:", series);
+
+    let newOnes = [], oldOnes = [], delOnes = [];
+    
+    for (let i = 0; i < this.chart.series.length; i++) {
+      if (series.find( (serie) => serie.name === this.chart.series[i].name ) ) {
+        console.log("FOUND:", this.chart.series[i]);
+      } else {
+        console.log("REMOVE:", this.chart.series[i]);
+        delOnes.push(this.chart.series[i]);
+      }
+    }
+    console.log("delOnes:", delOnes);
+
+    delOnes.forEach((serie) => {
+      serie.remove(true);
+    });
+    
+
     for (let i = 0; i < series.length; i++) {
-      if (this._chart.series.find((serie) => serie.name === series[i].name)) {
+      if (this.chart.series.find((serie) => serie.name === series[i].name)) {
         oldOnes.push(series[i]);
       } else {
         newOnes.push(series[i]);
       }
     }
+    console.log("oldOnes:", oldOnes);
+    console.log("newOnes:", newOnes);
+
     newOnes.forEach((serie) => {
-      this._chart.addSeries(serie, false);
+      this.chart.addSeries(serie, false);
     });
-    console.log(newOnes);
-    this._chart.update({series: oldOnes}, false);
-    this._chart.redraw();
+
+    this.chart.update({series: oldOnes}, false);
+    this.chart.redraw();
   }
 
 

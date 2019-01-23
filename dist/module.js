@@ -105,7 +105,7 @@ var _element;
 // try {
 //   var Highcharts = require('highcharts');
 // } catch (err) { }
-var Highcharts = __webpack_require__(11);
+var Highcharts = __webpack_require__(5);
 
 // for debugging
 window.Highcharts = Highcharts;
@@ -131,17 +131,19 @@ var Ctrl = function (_MetricsPanelCtrl) {
     key: '_onRender',
     value: function _onRender() {
       // console.log("render");
-      if (this._chart) {
+      if (this.chart) {
         // this.chart.redraw();
-        this._chart.setSize(undefined, undefined, false);
+        this.chart.setSize(undefined, undefined, false);
       }
     }
   }, {
     key: '_onDataReceived',
     value: function _onDataReceived(data) {
+      console.log("----------------------------");
       console.log("_onDataReceived:", data);
-      if (!this._chart) {
-        this._chart = this._createChart(data);
+      if (!this.chart) {
+        this.chart = this._createChart(data);
+        console.log("chart:", this.chart); // Highcharts.charts[0]
       } else {
         this._updateChart(data);
       }
@@ -261,13 +263,28 @@ var Ctrl = function (_MetricsPanelCtrl) {
           "padding": 9,
           "shape": "square"
         },
-
-        series: this._makeSeries(data),
-        plotOptions: {
-          series: {
-            connectNulls: true
+        "plotOptions": {
+          "series": {
+            "connectNulls": true
           }
-        }
+        },
+
+        series: this._makeSeries(data)
+      });
+    }
+  }, {
+    key: 'flip',
+    value: function flip(array) {
+      // return array.map(([x, y]) => ([y * 1000, x]));
+      var offset = new Date().getTimezoneOffset();
+      console.log("getTimezoneOffset:", offset, 'min');
+      offset = offset * 60 * 1000;
+      return array.map(function (_ref) {
+        var _ref2 = _slicedToArray(_ref, 2),
+            x = _ref2[0],
+            y = _ref2[1];
+
+        return [y - offset, x];
       });
     }
   }, {
@@ -275,24 +292,25 @@ var Ctrl = function (_MetricsPanelCtrl) {
     value: function _makeSeries(data) {
       var _this2 = this;
 
+      // Highcharts.charts[0]
       console.log("_makeSeries");
       return data.map(function (timeSerie) {
+        console.log("timeSerie:", timeSerie);
         return {
           id: timeSerie.target,
           name: timeSerie.target,
-          data: _this2.flip(timeSerie.datapoints)
-        };
-      });
-    }
-  }, {
-    key: 'flip',
-    value: function flip(array) {
-      return array.map(function (_ref) {
-        var _ref2 = _slicedToArray(_ref, 2),
-            x = _ref2[0],
-            y = _ref2[1];
+          data: _this2.flip(timeSerie.datapoints),
 
-        return [y * 1000, x];
+          turboThreshold: 0,
+          marker: {
+            enabled: true,
+            symbol: "circle",
+            radius: 4
+          },
+          // color: '#FF0000',
+          // yAxis: 1,
+          type: "spline"
+        };
       });
     }
   }, {
@@ -300,12 +318,38 @@ var Ctrl = function (_MetricsPanelCtrl) {
     value: function _updateChart(data) {
       var _this3 = this;
 
+      console.log("_updateChart");
+      console.log("this.chart.series:", this.chart.series);
+
       var series = this._makeSeries(data);
+      console.log("series:", series);
+
       var newOnes = [],
-          oldOnes = [];
+          oldOnes = [],
+          delOnes = [];
 
       var _loop = function _loop(i) {
-        if (_this3._chart.series.find(function (serie) {
+        if (series.find(function (serie) {
+          return serie.name === _this3.chart.series[i].name;
+        })) {
+          console.log("FOUND:", _this3.chart.series[i]);
+        } else {
+          console.log("REMOVE:", _this3.chart.series[i]);
+          delOnes.push(_this3.chart.series[i]);
+        }
+      };
+
+      for (var i = 0; i < this.chart.series.length; i++) {
+        _loop(i);
+      }
+      console.log("delOnes:", delOnes);
+
+      delOnes.forEach(function (serie) {
+        serie.remove(true);
+      });
+
+      var _loop2 = function _loop2(i) {
+        if (_this3.chart.series.find(function (serie) {
           return serie.name === series[i].name;
         })) {
           oldOnes.push(series[i]);
@@ -315,14 +359,17 @@ var Ctrl = function (_MetricsPanelCtrl) {
       };
 
       for (var i = 0; i < series.length; i++) {
-        _loop(i);
+        _loop2(i);
       }
+      console.log("oldOnes:", oldOnes);
+      console.log("newOnes:", newOnes);
+
       newOnes.forEach(function (serie) {
-        _this3._chart.addSeries(serie, false);
+        _this3.chart.addSeries(serie, false);
       });
-      console.log(newOnes);
-      this._chart.update({ series: oldOnes }, false);
-      this._chart.redraw();
+
+      this.chart.update({ series: oldOnes }, false);
+      this.chart.redraw();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////
@@ -387,13 +434,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_1__;
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 5 */,
-/* 6 */,
-/* 7 */,
-/* 8 */,
-/* 9 */,
-/* 10 */,
-/* 11 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -409,9 +450,9 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
  License: www.highcharts.com/license
 */
 (function (M, I) {
-  "object" === ( false ? "undefined" : _typeof(module)) && module.exports ? (I["default"] = I, module.exports = M.document ? I(M) : I) :  true ? !(__WEBPACK_AMD_DEFINE_RESULT__ = (function () {
+  "object" === ( false ? "undefined" : _typeof(module)) && module.exports ? (I["default"] = I, module.exports = M.document ? I(M) : I) :  true ? !(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
     return I(M);
-  }).call(exports, __webpack_require__, exports, module),
+  }.call(exports, __webpack_require__, exports, module),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__)) : M.Highcharts = I(M);
 })("undefined" !== typeof window ? window : undefined, function (M) {
   var I = function () {
@@ -4819,10 +4860,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   })(I);return I;
 });
 //# sourceMappingURL=highcharts.js.map
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)(module)))
 
 /***/ }),
-/* 12 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";

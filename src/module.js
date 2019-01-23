@@ -223,7 +223,6 @@ class Ctrl extends MetricsPanelCtrl {
     delOnes.forEach((serie) => {
       serie.remove(true);
     });
-    
 
     for (let i = 0; i < series.length; i++) {
       if (this.chart.series.find((serie) => serie.name === series[i].name)) {

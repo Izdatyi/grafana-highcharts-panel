@@ -75,6 +75,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PanelCtrl = undefined;
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _sdk = __webpack_require__(1);
@@ -97,10 +99,11 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 // Remove up to here
 
 
-var Highcharts = __webpack_require__(11);
+// const Highcharts = require('highcharts');
 // try {
-//   const Highcharts = require('highcharts');
+//   var Highcharts = require('highcharts');
 // } catch (err) { }
+var Highcharts = __webpack_require__(11);
 
 // for debugging
 window.Highcharts = Highcharts;
@@ -124,12 +127,87 @@ var Ctrl = function (_MetricsPanelCtrl) {
     key: '_onDataReceived',
     value: function _onDataReceived(data) {
       console.log("_onDataReceived:", data);
-      // if (!this.chart) {
-      //   this.chart = this._createChart(data);
-      // } else {
-      //   this._updateChart(data);
-      // }
+      if (!this.chart) {
+        this.chart = this._createChart(data);
+      } else {
+        this._updateChart(data);
+      }
     }
+  }, {
+    key: '_createChart',
+    value: function _createChart(data) {
+      console.log("_createChart");
+      return Highcharts.chart('iz-container', {
+        xAxis: { type: 'datetime' },
+        series: this._makeSeries(data),
+        plotOptions: {
+          series: {
+            connectNulls: true
+          }
+        },
+        title: { text: 'TimeSeries Charts' },
+        legend: {
+          enabled: false
+        }
+      });
+    }
+  }, {
+    key: '_makeSeries',
+    value: function _makeSeries(data) {
+      var _this2 = this;
+
+      console.log("_makeSeries");
+      return data.map(function (timeSerie) {
+        return {
+          id: timeSerie.target,
+          name: timeSerie.target,
+          data: _this2.flip(timeSerie.datapoints)
+        };
+      });
+    }
+  }, {
+    key: 'flip',
+    value: function flip(array) {
+      return array.map(function (_ref) {
+        var _ref2 = _slicedToArray(_ref, 2),
+            x = _ref2[0],
+            y = _ref2[1];
+
+        return [y * 1000, x];
+      });
+    }
+  }, {
+    key: '_updateChart',
+    value: function _updateChart(data) {
+      var _this3 = this;
+
+      var series = this._makeSeries(data);
+      var newOnes = [],
+          oldOnes = [];
+
+      var _loop = function _loop(i) {
+        if (_this3.chart.series.find(function (serie) {
+          return serie.name === series[i].name;
+        })) {
+          oldOnes.push(series[i]);
+        } else {
+          newOnes.push(series[i]);
+        }
+      };
+
+      for (var i = 0; i < series.length; i++) {
+        _loop(i);
+      }
+      newOnes.forEach(function (serie) {
+        _this3.chart.addSeries(serie, false);
+      });
+      console.log(newOnes);
+      this.chart.update({ series: oldOnes }, false);
+      this.chart.redraw();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////
+
   }, {
     key: 'link',
     value: function link(scope, element) {

@@ -1,7 +1,7 @@
 {
   "type": "panel",
   "name": "Highcharts",
-  "id": "highcharts-panel",
+  "id": "iz-highcharts",
   "info": {
     "description": "Make your data come alive",
     "author": {

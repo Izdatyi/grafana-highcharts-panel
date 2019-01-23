@@ -1,6 +1,6 @@
 # Highcharts Panel -  Native Plugin
 
-The Highcharts Panel allows you ...
+The Highcharts Panel allows you ... create Highcharts :)
 
 Read more about it here:
 

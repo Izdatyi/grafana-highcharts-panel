@@ -91,7 +91,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // will be resolved to app/plugins/sdk
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // import { PanelConfig } from './panel-config';
+// will be resolved to app/plugins/sdk
 
 // Remove next imports if you don't need separate styles for light and dark themes
 
@@ -119,15 +120,26 @@ var Ctrl = function (_MetricsPanelCtrl) {
     console.log("<constructor>");
     console.log("Highcharts version:", Highcharts.version);
 
+    // this._panelConfig = new PanelConfig(this.panel);
+
     var _this = _possibleConstructorReturn(this, (Ctrl.__proto__ || Object.getPrototypeOf(Ctrl)).call(this, $scope, $injector));
 
     _this.events.on('data-received', _this._onDataReceived.bind(_this));
     _this.events.on('render', _this._onRender.bind(_this));
     // this.events.on('init-edit-mode', () => {console.log("init-edit-mode");} );
+    _this.events.on('init-edit-mode', _this._onInitEditMode.bind(_this));
     return _this;
   }
 
   _createClass(Ctrl, [{
+    key: '_onInitEditMode',
+    value: function _onInitEditMode() {
+      console.log("_onInitEditMode");
+      // var thisPartialPath = this._panelConfig.pluginDirName + 'partials/';
+      // this.addEditorTab('Legend', thisPartialPath + 'legend.html', 2);
+      this.addEditorTab('Legend', this.panelPath + 'partials/legend.html', 2);
+    }
+  }, {
     key: '_onRender',
     value: function _onRender() {
       // console.log("render");
@@ -296,10 +308,47 @@ var Ctrl = function (_MetricsPanelCtrl) {
       console.log("_makeSeries");
       return data.map(function (timeSerie) {
         console.log("timeSerie:", timeSerie);
+
+        var min = 0,
+            max = 0,
+            avg = 0,
+            current = 0,
+            total = 0,
+            datos = new Array();
+
+        for (var i = 0; i < timeSerie.datapoints.length; i++) {
+          if (!isNaN(parseFloat(timeSerie.datapoints[i][0]))) {
+            current = timeSerie.datapoints[i][0];
+            total += current;
+            datos[i] = current;
+          }
+        }
+
+        if (datos.length > 0) {
+          min = Math.min.apply({}, datos); // Math.min(datos);
+          max = Math.max.apply({}, datos); // Math.max(datos);
+          avg = total / datos.length;
+        }
+
+        // console.log("min:", min);
+        // console.log("max:", max);
+        // console.log("avg:", avg);
+        // console.log("current:", current);
+        // console.log("total:", total);
+        // // console.log("count:", datos.length);
+        // // console.log("datos:", datos);       
+
+
         return {
           id: timeSerie.target,
           name: timeSerie.target,
           data: _this2.flip(timeSerie.datapoints),
+
+          _min: min,
+          _max: max,
+          _avg: avg,
+          _current: current,
+          _total: min,
 
           turboThreshold: 0,
           marker: {
@@ -332,7 +381,7 @@ var Ctrl = function (_MetricsPanelCtrl) {
         if (series.find(function (serie) {
           return serie.name === _this3.chart.series[i].name;
         })) {
-          console.log("FOUND:", _this3.chart.series[i]);
+          // console.log("FOUND:", this.chart.series[i]);
         } else {
           console.log("REMOVE:", _this3.chart.series[i]);
           delOnes.push(_this3.chart.series[i]);

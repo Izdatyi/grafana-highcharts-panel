@@ -1,3 +1,4 @@
+// import { PanelConfig } from './panel-config';
 import { MetricsPanelCtrl } from 'grafana/app/plugins/sdk'; // will be resolved to app/plugins/sdk
 
 import './css/panel.base.scss';
@@ -24,10 +25,33 @@ class Ctrl extends MetricsPanelCtrl {
     console.log("<constructor>");
     console.log("Highcharts version:", Highcharts.version);
     super($scope, $injector);
+
+    // this._panelConfig = new PanelConfig(this.panel);
+
     this.events.on('data-received', this._onDataReceived.bind(this));
     this.events.on('render', this._onRender.bind(this) );
     // this.events.on('init-edit-mode', () => {console.log("init-edit-mode");} );
+    this.events.on('init-edit-mode', this._onInitEditMode.bind(this));
   }
+
+  _onInitEditMode() {
+    console.log("_onInitEditMode");
+    // var thisPartialPath = this._panelConfig.pluginDirName + 'partials/';
+    // this.addEditorTab('Legend', thisPartialPath + 'legend.html', 2);
+    this.addEditorTab('Legend',  this.panelPath + 'partials/legend.html', 2);
+  }
+
+  get panelPath() {
+    if(!this._panelPath) {
+      var panels = window['grafanaBootData'].settings.panels;
+      var thisPanel = panels[this.pluginId];
+      // the system loader preprends publib to the url,
+      // add a .. to go back one level
+      this._panelPath = '../' + thisPanel.baseUrl + '/';
+    }
+    return this._panelPath;
+  }
+
 
   _onRender() {
     // console.log("render");
@@ -183,10 +207,42 @@ class Ctrl extends MetricsPanelCtrl {
     console.log("_makeSeries");
     return data.map((timeSerie) => {
       console.log("timeSerie:", timeSerie);
+
+      let min = 0, max = 0, avg = 0, current = 0, total = 0, datos = new Array();
+      
+      for (var i = 0; i < timeSerie.datapoints.length; i++) {
+        if (!isNaN(parseFloat(timeSerie.datapoints[i][0]))) {
+          current = timeSerie.datapoints[i][0];
+          total += current;
+          datos[i] = current;
+        }
+      }
+
+      if (datos.length > 0) {
+        min = Math.min.apply({}, datos); // Math.min(datos);
+        max = Math.max.apply({}, datos); // Math.max(datos);
+        avg = (total / datos.length);
+      }
+      
+      // console.log("min:", min);
+      // console.log("max:", max);
+      // console.log("avg:", avg);
+      // console.log("current:", current);
+      // console.log("total:", total);
+      // // console.log("count:", datos.length);
+      // // console.log("datos:", datos);       
+
+
       return {
         id: timeSerie.target,
         name: timeSerie.target,
         data: this.flip(timeSerie.datapoints),
+
+        _min: min,
+        _max: max,
+        _avg: avg,
+        _current: current,
+        _total: min,
 
         turboThreshold: 0,
         marker: {
@@ -212,7 +268,7 @@ class Ctrl extends MetricsPanelCtrl {
     
     for (let i = 0; i < this.chart.series.length; i++) {
       if (series.find( (serie) => serie.name === this.chart.series[i].name ) ) {
-        console.log("FOUND:", this.chart.series[i]);
+        // console.log("FOUND:", this.chart.series[i]);
       } else {
         console.log("REMOVE:", this.chart.series[i]);
         delOnes.push(this.chart.series[i]);
